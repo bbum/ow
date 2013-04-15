@@ -16,11 +16,10 @@ Implementation Notes
 
 The implementation is such that both network downloading and binary file analysis can easily be extracted for use in other programs. Note that the code will *almost* work on iOS;  the use of NSInputStream and NSOutputStream will need to be refactored to use CF*Stream.
 
-The command line tool does all command line argument processing through a slightly modified version of Dave Dribin's wonderful DDCLI project.  The modifications enable the whole *program <opts> subcommand <opts> <args>* pattern akin to `launchctl`, `git`, `svn`, etc… to be easily implemented.
+The command line tool does all command line argument processing through a slightly modified version of Dave Dribin's wonderful DDCLI project.  The modifications enable the whole *program <opts> subcommand <opts> <args>* pattern akin to `launchctl`, `git`, `svn`, etc… to be easily implemented. See http://www.dribin.org/dave/blog/archives/2008/04/29/ddcli/ for more info.
 
 If you were to want to embed Owon oscilliscope support into your OS X or iOS application, start with the classes in the **Owon Oscilliscope Classes** group.  In particular, the **OwOscilloscope** class provides a simple to use interface for talking to an Owon scope (currently limited to LAN based communications).   The **OwBinFile** class implements decoding of the binary data files from an Owon scope (it is currently incomplete;  needs to have the math added that converts the raw samples into actual data).
 
-See http://www.dribin.org/dave/blog/archives/2008/04/29/ddcli/ for more info.
 
 To Do
 -----
