@@ -1,0 +1,368 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		77FAA62B17109D3100A881A3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77FAA62A17109D3100A881A3 /* Foundation.framework */; };
+		77FAA62E17109D3100A881A3 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 77FAA62D17109D3100A881A3 /* main.m */; };
+		77FAA63A17109D7800A881A3 /* OwBinFile.m in Sources */ = {isa = PBXBuildFile; fileRef = 77FAA63917109D7800A881A3 /* OwBinFile.m */; };
+		77FAA63F1710AEC300A881A3 /* OwStreamingDataParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 77FAA63E1710AEC300A881A3 /* OwStreamingDataParser.m */; };
+		77FAA64B1710E57000A881A3 /* dd_getopt_long-fbsd.m in Sources */ = {isa = PBXBuildFile; fileRef = 77FAA6411710E57000A881A3 /* dd_getopt_long-fbsd.m */; };
+		77FAA64C1710E57000A881A3 /* DDCliApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 77FAA6431710E57000A881A3 /* DDCliApplication.m */; };
+		77FAA64D1710E57000A881A3 /* DDCliParseException.m in Sources */ = {isa = PBXBuildFile; fileRef = 77FAA6451710E57000A881A3 /* DDCliParseException.m */; };
+		77FAA64E1710E57000A881A3 /* DDCliUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 77FAA6471710E57000A881A3 /* DDCliUtil.m */; };
+		77FAA64F1710E57000A881A3 /* DDGetoptLongParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 77FAA64A1710E57000A881A3 /* DDGetoptLongParser.m */; };
+		77FAA6521710E64500A881A3 /* OwApp.m in Sources */ = {isa = PBXBuildFile; fileRef = 77FAA6511710E64500A881A3 /* OwApp.m */; };
+		77FAA6561710E79E00A881A3 /* OwAbstractSubcommand.m in Sources */ = {isa = PBXBuildFile; fileRef = 77FAA6551710E79E00A881A3 /* OwAbstractSubcommand.m */; };
+		77FAA6591710E82C00A881A3 /* OwParseBinaryData.m in Sources */ = {isa = PBXBuildFile; fileRef = 77FAA6581710E82C00A881A3 /* OwParseBinaryData.m */; };
+		77FAA65C1710ED9D00A881A3 /* OwNetworkLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = 77FAA65B1710ED9D00A881A3 /* OwNetworkLoader.m */; };
+		77FAA65F1710F3B900A881A3 /* OwOscilloscope.m in Sources */ = {isa = PBXBuildFile; fileRef = 77FAA65E1710F3B900A881A3 /* OwOscilloscope.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		77FAA62517109D3100A881A3 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		77FAA62717109D3100A881A3 /* ow */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ow; sourceTree = BUILT_PRODUCTS_DIR; };
+		77FAA62A17109D3100A881A3 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		77FAA62D17109D3100A881A3 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		77FAA63017109D3100A881A3 /* ow-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ow-Prefix.pch"; sourceTree = "<group>"; };
+		77FAA63817109D7800A881A3 /* OwBinFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OwBinFile.h; sourceTree = "<group>"; };
+		77FAA63917109D7800A881A3 /* OwBinFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OwBinFile.m; sourceTree = "<group>"; };
+		77FAA63D1710AEC300A881A3 /* OwStreamingDataParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OwStreamingDataParser.h; sourceTree = "<group>"; };
+		77FAA63E1710AEC300A881A3 /* OwStreamingDataParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OwStreamingDataParser.m; sourceTree = "<group>"; };
+		77FAA6411710E57000A881A3 /* dd_getopt_long-fbsd.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "dd_getopt_long-fbsd.m"; sourceTree = "<group>"; };
+		77FAA6421710E57000A881A3 /* DDCliApplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDCliApplication.h; sourceTree = "<group>"; };
+		77FAA6431710E57000A881A3 /* DDCliApplication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDCliApplication.m; sourceTree = "<group>"; };
+		77FAA6441710E57000A881A3 /* DDCliParseException.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDCliParseException.h; sourceTree = "<group>"; };
+		77FAA6451710E57000A881A3 /* DDCliParseException.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDCliParseException.m; sourceTree = "<group>"; };
+		77FAA6461710E57000A881A3 /* DDCliUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDCliUtil.h; sourceTree = "<group>"; };
+		77FAA6471710E57000A881A3 /* DDCliUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDCliUtil.m; sourceTree = "<group>"; };
+		77FAA6481710E57000A881A3 /* DDCommandLineInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDCommandLineInterface.h; sourceTree = "<group>"; };
+		77FAA6491710E57000A881A3 /* DDGetoptLongParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDGetoptLongParser.h; sourceTree = "<group>"; };
+		77FAA64A1710E57000A881A3 /* DDGetoptLongParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDGetoptLongParser.m; sourceTree = "<group>"; };
+		77FAA6501710E64500A881A3 /* OwApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OwApp.h; sourceTree = "<group>"; };
+		77FAA6511710E64500A881A3 /* OwApp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OwApp.m; sourceTree = "<group>"; };
+		77FAA6541710E79E00A881A3 /* OwAbstractSubcommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OwAbstractSubcommand.h; path = Subcommands/OwAbstractSubcommand.h; sourceTree = "<group>"; };
+		77FAA6551710E79E00A881A3 /* OwAbstractSubcommand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OwAbstractSubcommand.m; path = Subcommands/OwAbstractSubcommand.m; sourceTree = "<group>"; };
+		77FAA6571710E82C00A881A3 /* OwParseBinaryData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OwParseBinaryData.h; path = Subcommands/OwParseBinaryData.h; sourceTree = "<group>"; };
+		77FAA6581710E82C00A881A3 /* OwParseBinaryData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OwParseBinaryData.m; path = Subcommands/OwParseBinaryData.m; sourceTree = "<group>"; };
+		77FAA65A1710ED9D00A881A3 /* OwNetworkLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OwNetworkLoader.h; path = Subcommands/OwNetworkLoader.h; sourceTree = "<group>"; };
+		77FAA65B1710ED9D00A881A3 /* OwNetworkLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OwNetworkLoader.m; path = Subcommands/OwNetworkLoader.m; sourceTree = "<group>"; };
+		77FAA65D1710F3B800A881A3 /* OwOscilloscope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OwOscilloscope.h; sourceTree = "<group>"; };
+		77FAA65E1710F3B900A881A3 /* OwOscilloscope.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OwOscilloscope.m; sourceTree = "<group>"; };
+		77FAA660171BC5E400A881A3 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		77FAA661171BC5E400A881A3 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		77FAA62417109D3100A881A3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				77FAA62B17109D3100A881A3 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		77FAA61E17109D3100A881A3 = {
+			isa = PBXGroup;
+			children = (
+				77FAA660171BC5E400A881A3 /* LICENSE */,
+				77FAA661171BC5E400A881A3 /* README.md */,
+				77FAA62C17109D3100A881A3 /* ow */,
+				77FAA62917109D3100A881A3 /* Frameworks */,
+				77FAA62817109D3100A881A3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		77FAA62817109D3100A881A3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				77FAA62717109D3100A881A3 /* ow */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		77FAA62917109D3100A881A3 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				77FAA62A17109D3100A881A3 /* Foundation.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		77FAA62C17109D3100A881A3 /* ow */ = {
+			isa = PBXGroup;
+			children = (
+				77FAA62F17109D3100A881A3 /* Supporting Files */,
+				77FAA662171BC63800A881A3 /* Owon Oscilliscope Classes */,
+				77FAA663171BC66C00A881A3 /* ow Command Line Implementation */,
+			);
+			path = ow;
+			sourceTree = "<group>";
+		};
+		77FAA62F17109D3100A881A3 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				77FAA63017109D3100A881A3 /* ow-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		77FAA6401710E55600A881A3 /* DDCli */ = {
+			isa = PBXGroup;
+			children = (
+				77FAA6411710E57000A881A3 /* dd_getopt_long-fbsd.m */,
+				77FAA6421710E57000A881A3 /* DDCliApplication.h */,
+				77FAA6431710E57000A881A3 /* DDCliApplication.m */,
+				77FAA6441710E57000A881A3 /* DDCliParseException.h */,
+				77FAA6451710E57000A881A3 /* DDCliParseException.m */,
+				77FAA6461710E57000A881A3 /* DDCliUtil.h */,
+				77FAA6471710E57000A881A3 /* DDCliUtil.m */,
+				77FAA6481710E57000A881A3 /* DDCommandLineInterface.h */,
+				77FAA6491710E57000A881A3 /* DDGetoptLongParser.h */,
+				77FAA64A1710E57000A881A3 /* DDGetoptLongParser.m */,
+			);
+			path = DDCli;
+			sourceTree = "<group>";
+		};
+		77FAA6531710E77F00A881A3 /* Subcommands */ = {
+			isa = PBXGroup;
+			children = (
+				77FAA6541710E79E00A881A3 /* OwAbstractSubcommand.h */,
+				77FAA6551710E79E00A881A3 /* OwAbstractSubcommand.m */,
+				77FAA6571710E82C00A881A3 /* OwParseBinaryData.h */,
+				77FAA6581710E82C00A881A3 /* OwParseBinaryData.m */,
+				77FAA65A1710ED9D00A881A3 /* OwNetworkLoader.h */,
+				77FAA65B1710ED9D00A881A3 /* OwNetworkLoader.m */,
+			);
+			name = Subcommands;
+			sourceTree = "<group>";
+		};
+		77FAA662171BC63800A881A3 /* Owon Oscilliscope Classes */ = {
+			isa = PBXGroup;
+			children = (
+				77FAA65D1710F3B800A881A3 /* OwOscilloscope.h */,
+				77FAA65E1710F3B900A881A3 /* OwOscilloscope.m */,
+				77FAA63817109D7800A881A3 /* OwBinFile.h */,
+				77FAA63917109D7800A881A3 /* OwBinFile.m */,
+				77FAA63D1710AEC300A881A3 /* OwStreamingDataParser.h */,
+				77FAA63E1710AEC300A881A3 /* OwStreamingDataParser.m */,
+			);
+			name = "Owon Oscilliscope Classes";
+			sourceTree = "<group>";
+		};
+		77FAA663171BC66C00A881A3 /* ow Command Line Implementation */ = {
+			isa = PBXGroup;
+			children = (
+				77FAA62D17109D3100A881A3 /* main.m */,
+				77FAA6501710E64500A881A3 /* OwApp.h */,
+				77FAA6511710E64500A881A3 /* OwApp.m */,
+				77FAA6531710E77F00A881A3 /* Subcommands */,
+				77FAA6401710E55600A881A3 /* DDCli */,
+			);
+			name = "ow Command Line Implementation";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		77FAA62617109D3100A881A3 /* ow */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 77FAA63517109D3100A881A3 /* Build configuration list for PBXNativeTarget "ow" */;
+			buildPhases = (
+				77FAA62317109D3100A881A3 /* Sources */,
+				77FAA62417109D3100A881A3 /* Frameworks */,
+				77FAA62517109D3100A881A3 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ow;
+			productName = ow;
+			productReference = 77FAA62717109D3100A881A3 /* ow */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		77FAA61F17109D3100A881A3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+				ORGANIZATIONNAME = "Bill Bumgarner";
+			};
+			buildConfigurationList = 77FAA62217109D3100A881A3 /* Build configuration list for PBXProject "ow" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 77FAA61E17109D3100A881A3;
+			productRefGroup = 77FAA62817109D3100A881A3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				77FAA62617109D3100A881A3 /* ow */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		77FAA62317109D3100A881A3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				77FAA62E17109D3100A881A3 /* main.m in Sources */,
+				77FAA63A17109D7800A881A3 /* OwBinFile.m in Sources */,
+				77FAA63F1710AEC300A881A3 /* OwStreamingDataParser.m in Sources */,
+				77FAA64B1710E57000A881A3 /* dd_getopt_long-fbsd.m in Sources */,
+				77FAA64C1710E57000A881A3 /* DDCliApplication.m in Sources */,
+				77FAA64D1710E57000A881A3 /* DDCliParseException.m in Sources */,
+				77FAA64E1710E57000A881A3 /* DDCliUtil.m in Sources */,
+				77FAA64F1710E57000A881A3 /* DDGetoptLongParser.m in Sources */,
+				77FAA6521710E64500A881A3 /* OwApp.m in Sources */,
+				77FAA6561710E79E00A881A3 /* OwAbstractSubcommand.m in Sources */,
+				77FAA6591710E82C00A881A3 /* OwParseBinaryData.m in Sources */,
+				77FAA65C1710ED9D00A881A3 /* OwNetworkLoader.m in Sources */,
+				77FAA65F1710F3B900A881A3 /* OwOscilloscope.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		77FAA63317109D3100A881A3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_RECEIVER_WEAK = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_MULTIPLE_DEFINITION_TYPES_FOR_SELECTOR = NO;
+				GCC_WARN_STRICT_SELECTOR_MATCH = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
+				RUN_CLANG_STATIC_ANALYZER = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		77FAA63417109D3100A881A3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_RECEIVER_WEAK = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_MULTIPLE_DEFINITION_TYPES_FOR_SELECTOR = NO;
+				GCC_WARN_STRICT_SELECTOR_MATCH = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				RUN_CLANG_STATIC_ANALYZER = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		77FAA63617109D3100A881A3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "ow/ow-Prefix.pch";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		77FAA63717109D3100A881A3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "ow/ow-Prefix.pch";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		77FAA62217109D3100A881A3 /* Build configuration list for PBXProject "ow" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				77FAA63317109D3100A881A3 /* Debug */,
+				77FAA63417109D3100A881A3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		77FAA63517109D3100A881A3 /* Build configuration list for PBXNativeTarget "ow" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				77FAA63617109D3100A881A3 /* Debug */,
+				77FAA63717109D3100A881A3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 77FAA61F17109D3100A881A3 /* Project object */;
+}
