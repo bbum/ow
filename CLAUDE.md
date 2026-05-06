@@ -22,7 +22,8 @@ make install             # release → ~/.local/bin/ow
 ```
 
 Swift 6.2, SPM single executable target, macOS 26+, Apple-frameworks-only
-(`Network` for TCP, `AppKit` for BMP→PNG).
+(`AppKit` for BMP→PNG). TCP transport shells out to `/usr/bin/nc` — see
+"Network transport" below.
 
 ## Architecture
 
@@ -33,7 +34,7 @@ Sources/ow/
 │   ├── ScopeConfig.swift       # host/port/timeouts + net.bbum.ow defaults
 │   ├── BinaryReader.swift      # little-endian byte reader
 │   ├── WireProtocol.swift      # commands + 12-byte response envelope
-│   ├── ScopeClient.swift       # NWConnection async wrapper, envelope-driven termination, idle-timeout fallback
+│   ├── ScopeClient.swift       # nc(1) subprocess transport — see "Network transport" below
 │   ├── BinFile.swift           # parser (handles both live + USB-saved layouts)
 │   └── BMP.swift               # BMP→PNG via NSBitmapImageRep
 ├── Subcommands/                # one struct per CLI subcommand
@@ -54,6 +55,44 @@ Sources/ow/
         ├── CaptureWaveformTool.swift      (capture_waveform)
         └── ParseBinFileTool.swift         (parse_bin_file)
 ```
+
+## Network transport
+
+`ScopeClient` shells out to `/usr/bin/nc` for every TCP operation. This is
+ugly but is the **only** approach that works reliably on a multi-homed Mac.
+
+The full story:
+
+- The scope's NIC is cheap and only ARP-replies on the path it last talked
+  to. On a Mac with two interfaces on the same subnet (e.g. WiFi en0 +
+  wired en7), one interface's ARP entry for the scope goes "incomplete"
+  permanently and that interface returns `EHOSTUNREACH` for any connect.
+- The kernel routing table picks the working interface — `route get` and
+  every Apple-shipped network tool (`nc`, `ping`, `ssh`) connect fine.
+- But: `NWConnection`, BSD `connect()` from a third-party compiled binary,
+  and even the same Swift script when AOT-compiled with `swiftc` all fail
+  with `ENETDOWN` or `EHOSTUNREACH`. Apple's tools work because
+  `/usr/bin/nc`, `/sbin/ping`, etc. carry private entitlements
+  (`com.apple.private.network.intcoproc.restricted.development`,
+  `com.apple.private.network.management.data.development`) that third-party
+  binaries cannot get. The kernel's path-validation layer respects those
+  entitlements and falls back to the routing-table choice; without them it
+  refuses to use a path that has any ARP failure on it.
+- Tested workarounds that do **not** help on a multi-homed Mac:
+  - `NWParameters.requiredInterface = en7` (still ENETDOWN)
+  - `NWParameters.requiredLocalEndpoint = 10.0.1.249:0` (still ENETDOWN)
+  - `setsockopt(IP_BOUND_IF, en7)` from raw BSD socket (still EHOSTUNREACH)
+  - `bind()` to en7's local IP, then `connect()` (still EHOSTUNREACH)
+  - `connectx()` with `sae_srcif = en7` (still EHOSTUNREACH)
+
+Spawning Apple's `/usr/bin/nc` is the simplest, most robust answer. The
+overhead is one fork+exec per capture (~5 ms); the scope itself takes
+hundreds of ms to seconds, so the cost is invisible.
+
+`ScopeClient` is also a serial bottleneck (its DispatchQueue is serial), so
+two MCP tool calls in the same process can't overlap and lock up the scope —
+which is critical because the scope only accepts one connection at a time
+and lockups require a power cycle.
 
 ## Wire Protocol
 

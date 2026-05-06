@@ -1,11 +1,21 @@
 import Foundation
-import Network
 
 /// Async TCP client for an Owon SDS-series oscilloscope.
 ///
-/// Each capture opens a fresh connection, sends one command, reads until EOF, then closes.
-/// The scope drops the connection after streaming the response. Stateless aside from the
-/// configuration, so a regular class (not an actor) is sufficient.
+/// Each capture spawns `/usr/bin/nc` to do the actual TCP, sends one command,
+/// reads the response, then exits. Stateless aside from configuration, so a
+/// regular class (not an actor) is sufficient.
+///
+/// **Why nc instead of NWConnection or BSD sockets?** Apple's `/usr/bin/nc`
+/// holds the private entitlement `com.apple.private.network.intcoproc.restricted.development`,
+/// which third-party binaries cannot get. On a multi-homed Mac where one
+/// interface has a stale-incomplete ARP for the destination, NWConnection
+/// (and even raw `connect()` from a third-party compiled binary) sit in
+/// `.waiting` / return `EHOSTUNREACH` instead of using the kernel routing
+/// table's choice. `nc` always works because the entitlement bypasses that
+/// path-validation layer. Shelling out is ugly but is the only thing that
+/// works reliably across multi-homed Macs without requiring the user to
+/// disable WiFi or change network topology.
 final class ScopeClient: Sendable {
     let config: ScopeConfig
 
@@ -19,234 +29,133 @@ final class ScopeClient: Sendable {
         return try CaptureResponse.parse(raw)
     }
 
-    /// TCP-level connectivity check. Opens a connection and immediately closes it.
+    /// TCP-level connectivity check via `nc -z`. Exit code 0 means the port
+    /// answered SYN; non-zero means timeout or RST.
     func probe() async throws {
-        let connection = makeConnection()
-        try await openConnection(connection)
-        connection.cancel()
+        try await runOnIOQueue { [config] in
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: Self.ncPath)
+            process.arguments = [
+                "-z",
+                "-G", String(Int(max(1, config.connectTimeout))),
+                "-w", "1",
+                config.host, String(config.port)
+            ]
+            // Suppress nc's "Connection succeeded" message (it goes to stderr).
+            process.standardOutput = FileHandle.nullDevice
+            process.standardError = FileHandle.nullDevice
+            do {
+                try process.run()
+            } catch {
+                throw ScopeClientError.transportFailed("could not exec nc: \(error.localizedDescription)")
+            }
+            process.waitUntilExit()
+            if process.terminationStatus != 0 {
+                throw ScopeClientError.unreachable
+            }
+        }
     }
 
     // MARK: - Internals
 
-    private func send(_ payload: Data) async throws -> Data {
-        let connection = makeConnection()
-        log("opening connection")
-        try await openConnection(connection)
-        log("connection open")
-        defer { connection.cancel() }
+    /// Use Apple's nc — see comment at top of file. We hard-code the path
+    /// because nc earlier on `$PATH` (e.g. a homebrew gnu netcat) would lack
+    /// the private entitlement and fail with `EHOSTUNREACH` on multi-homed Macs.
+    private static let ncPath = "/usr/bin/nc"
 
-        try await sendAll(connection, payload: payload)
-        log("send complete (\(payload.count) bytes)")
-        let data = try await receiveAll(connection)
-        log("receive complete (\(data.count) bytes)")
-        return data
+    private func send(_ payload: Data) async throws -> Data {
+        try await runOnIOQueue { [config] in
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: Self.ncPath)
+            // -G: connect timeout (seconds). -w: idle timeout — how long to
+            // wait for more data after the scope goes silent. The scope sends
+            // its envelope+body and then stops without closing, so we rely on
+            // -w to terminate the read.
+            process.arguments = [
+                "-G", String(Int(max(1, config.connectTimeout))),
+                "-w", String(Int(max(1, config.receiveTimeout))),
+                config.host, String(config.port)
+            ]
+            let stdinPipe = Pipe()
+            let stdoutPipe = Pipe()
+            let stderrPipe = Pipe()
+            process.standardInput = stdinPipe
+            process.standardOutput = stdoutPipe
+            process.standardError = stderrPipe
+
+            Self.log("spawning nc \(process.arguments?.joined(separator: " ") ?? "") (\(payload.count) byte cmd)")
+            do {
+                try process.run()
+            } catch {
+                throw ScopeClientError.transportFailed("could not exec nc: \(error.localizedDescription)")
+            }
+
+            // Send the command and signal EOF on our write end. nc forwards
+            // the bytes to the socket, then waits for response.
+            do {
+                try stdinPipe.fileHandleForWriting.write(contentsOf: payload)
+                try stdinPipe.fileHandleForWriting.close()
+            } catch {
+                process.terminate()
+                throw ScopeClientError.transportFailed("write to nc stdin failed: \(error.localizedDescription)")
+            }
+
+            // Drain stdout fully. With BMPs this reaches ~1.4 MB.
+            let data: Data
+            do {
+                data = try stdoutPipe.fileHandleForReading.readToEnd() ?? Data()
+            } catch {
+                process.terminate()
+                throw ScopeClientError.transportFailed("read from nc stdout failed: \(error.localizedDescription)")
+            }
+
+            process.waitUntilExit()
+            let status = process.terminationStatus
+            Self.log("nc exited status=\(status), \(data.count) bytes")
+
+            if data.isEmpty {
+                // nc returned no bytes. Capture stderr to surface why
+                // (e.g. "Connection refused", "Operation timed out").
+                let err = (try? stderrPipe.fileHandleForReading.readToEnd()) ?? nil
+                let msg = err.flatMap { String(data: $0, encoding: .utf8) }?.trimmingCharacters(in: .whitespacesAndNewlines)
+                if status != 0 {
+                    throw ScopeClientError.unreachable
+                }
+                throw ScopeClientError.transportFailed("nc returned no data\(msg.map { ": \($0)" } ?? "")")
+            }
+
+            return data
+        }
     }
 
-    private func log(_ message: String) {
+    private static let ioQueue = DispatchQueue(label: "net.bbum.ow.scope.io", qos: .userInitiated)
+
+    private func runOnIOQueue<T: Sendable>(_ work: @escaping @Sendable () throws -> T) async throws -> T {
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<T, Error>) in
+            Self.ioQueue.async {
+                do { cont.resume(returning: try work()) }
+                catch { cont.resume(throwing: error) }
+            }
+        }
+    }
+
+    fileprivate static func log(_ message: String) {
         if ProcessInfo.processInfo.environment["OW_DEBUG"] != nil {
             FileHandle.standardError.write(Data("[ow] \(message)\n".utf8))
         }
     }
-
-    private let networkQueue = DispatchQueue(label: "net.bbum.ow.scope")
-
-    private func makeConnection() -> NWConnection {
-        let host = NWEndpoint.Host(config.host)
-        let port = NWEndpoint.Port(rawValue: config.port)!
-        let params = NWParameters.tcp
-        return NWConnection(host: host, port: port, using: params)
-    }
-
-    private func openConnection(_ connection: NWConnection) async throws {
-        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
-            let resumed = ResumedFlag()
-            connection.stateUpdateHandler = { state in
-                switch state {
-                case .ready:
-                    if resumed.tryClaim() { cont.resume() }
-                case .failed(let err):
-                    if resumed.tryClaim() { cont.resume(throwing: ScopeClientError.connectionFailed(err)) }
-                case .cancelled:
-                    if resumed.tryClaim() { cont.resume(throwing: ScopeClientError.cancelled) }
-                default:
-                    break
-                }
-            }
-            connection.start(queue: networkQueue)
-            networkQueue.asyncAfter(deadline: .now() + config.connectTimeout) {
-                if resumed.tryClaim() {
-                    connection.cancel()
-                    cont.resume(throwing: ScopeClientError.connectTimeout)
-                }
-            }
-        }
-    }
-
-    private func sendAll(_ connection: NWConnection, payload: Data) async throws {
-        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
-            connection.send(content: payload, completion: .contentProcessed { error in
-                if let error {
-                    cont.resume(throwing: ScopeClientError.sendFailed(error))
-                } else {
-                    cont.resume()
-                }
-            })
-        }
-    }
-
-    /// Drain the connection until isComplete (or peer reset). The entire receive
-    /// loop runs synchronously inside NWConnection's callback chain on the
-    /// network queue — only one continuation hop at the end. Avoids per-chunk
-    /// Swift Concurrency overhead, which nc-via-select doesn't pay either.
-    private func receiveAll(_ connection: NWConnection) async throws -> Data {
-        let log = self.log
-        let timeout = config.receiveTimeout
-        let queue = networkQueue
-        return try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Data, Error>) in
-            let state = ReceiveState()
-            let idleTimer = IdleTimer(queue: queue) { connection.cancel() }
-            idleTimer.rearm(after: timeout)
-
-            @Sendable func resume(_ result: Result<Data, Error>) {
-                guard state.tryFinish() else { return }
-                idleTimer.cancel()
-                cont.resume(with: result)
-            }
-
-            @Sendable func receiveLoop() {
-                // Pick a minimumIncompleteLength that matches what we know:
-                //  - Before the envelope is parsed, fetch just enough to see it (12 bytes).
-                //  - After parsing, request 64KB at a time to avoid one-callback-per-TCP-
-                //    segment overhead, but never more than the bytes still expected
-                //    (otherwise the final partial chunk hangs waiting for bytes that
-                //    will never arrive — the scope stops sending without sending FIN).
-                let minLen: Int
-                if state.expectedTotal == 0 {
-                    minLen = max(1, ResponseEnvelope.size - state.buffer.count)
-                } else {
-                    let remaining = max(1, state.expectedTotal - state.buffer.count)
-                    minLen = min(64 * 1024, remaining)
-                }
-                connection.receive(minimumIncompleteLength: minLen, maximumLength: 1024 * 1024) { data, _, isComplete, error in
-                    if let data, !data.isEmpty {
-                        state.buffer.append(data)
-                        idleTimer.rearm(after: timeout)
-                    }
-                    if let error {
-                        switch error {
-                        case .posix(.ECONNRESET), .posix(.ECANCELED):
-                            log("rx terminal error (peer reset/cancelled), total \(state.buffer.count) bytes")
-                            resume(.success(state.buffer))
-                        default:
-                            resume(.failure(ScopeClientError.receiveFailed(error)))
-                        }
-                        return
-                    }
-                    if isComplete {
-                        log("rx EOF, total \(state.buffer.count) bytes")
-                        resume(.success(state.buffer))
-                        return
-                    }
-                    // The scope stops sending without closing the connection, so
-                    // EOF would only arrive on idle timeout (~5s of dead air).
-                    // Parse the 12-byte envelope as soon as we have it and stop
-                    // receiving once we've got declared payload + envelope.
-                    if state.expectedTotal == 0, state.buffer.count >= ResponseEnvelope.size {
-                        if let env = try? ResponseEnvelope.parse(state.buffer.prefix(ResponseEnvelope.size)) {
-                            state.expectedTotal = ResponseEnvelope.size + env.payloadLength
-                            log("envelope: payload=\(env.payloadLength) flag=\(env.flag), expecting \(state.expectedTotal) total")
-                        }
-                    }
-                    if state.expectedTotal > 0, state.buffer.count >= state.expectedTotal {
-                        log("rx complete (envelope-driven), total \(state.buffer.count) bytes")
-                        resume(.success(state.buffer))
-                        return
-                    }
-                    receiveLoop()
-                }
-            }
-            receiveLoop()
-        }
-    }
-}
-
-/// Mutable state owned by the receive loop. The closure-based loop runs on the
-/// network queue (single-threaded) so unsynchronized mutation is safe.
-private final class ReceiveState: @unchecked Sendable {
-    var buffer = Data()
-    /// Total bytes expected (envelope + payload). Set to a positive value once
-    /// we've parsed the 12-byte envelope.
-    var expectedTotal = 0
-    private var finished = false
-    func tryFinish() -> Bool {
-        if finished { return false }
-        finished = true
-        return true
-    }
 }
 
 enum ScopeClientError: Error, CustomStringConvertible {
-    case connectFailed(Error)
-    case connectionFailed(Error)
-    case connectTimeout
-    case cancelled
-    case sendFailed(Error)
-    case receiveFailed(Error)
-    case receiveTimeout
+    case unreachable
+    case transportFailed(String)
 
     var description: String {
         switch self {
-        case .connectFailed(let e), .connectionFailed(let e):
-            return "connection failed: \(e.localizedDescription)"
-        case .connectTimeout:
-            return "connection timed out"
-        case .cancelled:
-            return "connection cancelled"
-        case .sendFailed(let e):
-            return "send failed: \(e.localizedDescription)"
-        case .receiveFailed(let e):
-            return "receive failed: \(e.localizedDescription)"
-        case .receiveTimeout:
-            return "receive timed out"
+        case .unreachable:
+            return "scope unreachable (TCP probe failed)"
+        case .transportFailed(let s):
+            return s
         }
-    }
-}
-
-/// Single-shot flag used to ensure a continuation is resumed exactly once.
-private final class ResumedFlag: @unchecked Sendable {
-    private var done = false
-    private let lock = NSLock()
-    func tryClaim() -> Bool {
-        lock.lock(); defer { lock.unlock() }
-        if done { return false }
-        done = true
-        return true
-    }
-}
-
-/// A rearmable single-shot timer dispatched to a serial queue.
-private final class IdleTimer: @unchecked Sendable {
-    private let queue: DispatchQueue
-    private let action: () -> Void
-    private var workItem: DispatchWorkItem?
-    private let lock = NSLock()
-
-    init(queue: DispatchQueue, action: @escaping () -> Void) {
-        self.queue = queue
-        self.action = action
-    }
-
-    func rearm(after seconds: TimeInterval) {
-        lock.lock(); defer { lock.unlock() }
-        workItem?.cancel()
-        let item = DispatchWorkItem { [action] in action() }
-        workItem = item
-        queue.asyncAfter(deadline: .now() + seconds, execute: item)
-    }
-
-    func cancel() {
-        lock.lock(); defer { lock.unlock() }
-        workItem?.cancel()
-        workItem = nil
     }
 }
