@@ -1,34 +1,63 @@
-ow
-==
+# ow
 
-OS X and iOS tools for interacting with Owon Oscilloscopes.
+CLI and MCP stdio server for Owon SDS-series oscilloscopes. Capture screenshots
+and waveforms over LAN; expose the same operations to LLMs so an agent can
+debug hardware directly.
 
-Currently allows screenshots and binary (not deep memory) dumps to be captured over the network.   Will also summarize a binary file.
+Verified against an SDS7102V; should work for the rest of the SDS series.
 
-Example:
+## Install
 
-     ~/ow net screen /tmp/screen.bmp
-     
-The above will capture whatever is currently on the screen on the oscilloscope to /tmp/screen.bmp.  Note that the host and port are read from the defaults database or can be specified on the command line.
+```
+make install     # → ~/.local/bin/ow
+```
 
-Implementation Notes
---------------------
+Requires Swift 6.2+, macOS 26+.
 
-The implementation is such that both network downloading and binary file analysis can easily be extracted for use in other programs. Note that the code will *almost* work on iOS;  the use of NSInputStream and NSOutputStream will need to be refactored to use CF*Stream.
+## Usage
 
-The command line tool does all command line argument processing through a slightly modified version of Dave Dribin's wonderful DDCLI project.  The modifications enable the whole *program <opts> subcommand <opts> <args>* pattern akin to `launchctl`, `git`, `svn`, etc… to be easily implemented. See http://www.dribin.org/dave/blog/archives/2008/04/29/ddcli/ for more info.
+```
+ow config set host 10.0.1.230
+ow status                     # identify the scope, print current waveform info
+ow screen out.png             # capture display (BMP→PNG conversion if .png)
+ow data out.bin               # capture waveform via STARTBIN
+ow memdepth out.bin           # capture deep-memory waveform via STARTMEMDEPTH
+ow bin --csv out.bin          # parse + summarize, write out.csv next to it
+ow mcp                        # run as MCP stdio server
+```
 
-If you were to want to embed Owon oscilliscope support into your OS X or iOS application, start with the classes in the **Owon Oscilliscope Classes** group.  In particular, the **OwOscilloscope** class provides a simple to use interface for talking to an Owon scope (currently limited to LAN based communications).   The **OwBinFile** class implements decoding of the binary data files from an Owon scope (it is currently incomplete;  needs to have the math added that converts the raw samples into actual data).
+Run `ow --help` or `ow <subcommand> --help` for details.
 
+## MCP
 
-To Do
------
+```
+ow mcp
+```
 
-- Implement CSV export in **OwBinFile**.   This includes adding the math bits necessary to apply the time/voltage multipliers/divisors to the raw samples.
+Speaks JSON-RPC over stdio. Four tools:
 
-- Add support for binary files that contain more than one channel's worth of data.
+- `scope_status` — probe + identify
+- `capture_screenshot` — returns PNG inline (so an LLM can view it)
+- `capture_waveform` — capture + parse, with `deep_memory`, `include_samples`, `decimate` options
+- `parse_bin_file` — parse a saved `.bin` from disk
 
-- Add support for deep memory data file decoding.
+Drop the binary in your MCP client config — e.g. for Claude Desktop:
 
-- Add an interactive mode.   Prompt the user for a name.  When user enters a name, sample a binary file and/or screenshot.   Then prompt the user for the next name.  This would allow one to easily run through a series of test scenarios;  "baseline", "control set to 5", "control set to 10", "pressed stop button", etc...
+```json
+{
+  "mcpServers": {
+    "ow": { "command": "/Users/you/.local/bin/ow", "args": ["mcp"] }
+  }
+}
+```
 
+## Protocol
+
+The Owon SDS network protocol is reverse-engineered — the vendor manual does
+not document it. See [`PROTOCOL.md`](PROTOCOL.md) for the byte-level reference.
+The scope does **not** speak SCPI; there is no remote-control surface, only
+capture-and-analyze.
+
+## License
+
+MIT (see LICENSE).
