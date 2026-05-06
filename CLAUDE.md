@@ -33,7 +33,7 @@ Sources/ow/
 │   ├── ScopeConfig.swift       # host/port/timeouts + net.bbum.ow defaults
 │   ├── BinaryReader.swift      # little-endian byte reader
 │   ├── WireProtocol.swift      # commands + 12-byte response envelope
-│   ├── ScopeClient.swift       # NWConnection async wrapper, idle-timeout
+│   ├── ScopeClient.swift       # NWConnection async wrapper, envelope-driven termination, idle-timeout fallback
 │   ├── BinFile.swift           # parser (handles both live + USB-saved layouts)
 │   └── BMP.swift               # BMP→PNG via NSBitmapImageRep
 ├── Subcommands/                # one struct per CLI subcommand
@@ -99,9 +99,6 @@ All capture tools accept `host` / `port` overrides per-call. Defaults come from
 
 ## Caveats
 
-- Connection throughput is ~100 KB/s (vs nc's ~180 KB/s) due to Network.framework
-  per-callback overhead. A 1.4 MB screenshot takes ~14s. Acceptable for now;
-  optimize later if needed (raw POSIX socket + select would close the gap).
 - The deep-memory `extendedFlags` bits are observed but their full semantics are
   unverified. We trust `collectionPointCount` for sample count, not `blockLength`.
 - Sample → voltage formula is best-effort (`voltsMultiplier` treated as mV/count).

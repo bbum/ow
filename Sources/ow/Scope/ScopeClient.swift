@@ -94,43 +94,94 @@ final class ScopeClient: Sendable {
         }
     }
 
+    /// Drain the connection until isComplete (or peer reset). The entire receive
+    /// loop runs synchronously inside NWConnection's callback chain on the
+    /// network queue — only one continuation hop at the end. Avoids per-chunk
+    /// Swift Concurrency overhead, which nc-via-select doesn't pay either.
     private func receiveAll(_ connection: NWConnection) async throws -> Data {
-        var buffer = Data()
-        // Idle-timeout: rearm after every chunk. Cancels the connection if the
-        // scope goes silent for more than receiveTimeout seconds, which forces
-        // any pending receive callback to error out (we treat ECANCELED as EOF).
-        let idleTimer = IdleTimer(queue: networkQueue) { connection.cancel() }
-        defer { idleTimer.cancel() }
-        idleTimer.rearm(after: config.receiveTimeout)
-        while true {
-            let (chunk, isComplete) = try await receiveOne(connection)
-            if let chunk {
-                buffer.append(chunk)
-                idleTimer.rearm(after: config.receiveTimeout)
-            }
-            if isComplete {
-                log("rx final, total \(buffer.count) bytes")
-                return buffer
-            }
-        }
-    }
+        let log = self.log
+        let timeout = config.receiveTimeout
+        let queue = networkQueue
+        return try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Data, Error>) in
+            let state = ReceiveState()
+            let idleTimer = IdleTimer(queue: queue) { connection.cancel() }
+            idleTimer.rearm(after: timeout)
 
-    private func receiveOne(_ connection: NWConnection) async throws -> (Data?, Bool) {
-        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<(Data?, Bool), Error>) in
-            // Connection-reset and cancellation are normal terminal states; treat as EOF.
-            connection.receive(minimumIncompleteLength: 1, maximumLength: 64 * 1024) { data, _, isComplete, error in
-                if let error {
-                    switch error {
-                    case .posix(.ECONNRESET), .posix(.ECANCELED):
-                        cont.resume(returning: (data, true))
-                    default:
-                        cont.resume(throwing: ScopeClientError.receiveFailed(error))
-                    }
+            func resume(_ result: Result<Data, Error>) {
+                guard state.tryFinish() else { return }
+                idleTimer.cancel()
+                cont.resume(with: result)
+            }
+
+            func receiveLoop() {
+                // Pick a minimumIncompleteLength that matches what we know:
+                //  - Before the envelope is parsed, fetch just enough to see it (12 bytes).
+                //  - After parsing, request 64KB at a time to avoid one-callback-per-TCP-
+                //    segment overhead, but never more than the bytes still expected
+                //    (otherwise the final partial chunk hangs waiting for bytes that
+                //    will never arrive — the scope stops sending without sending FIN).
+                let minLen: Int
+                if state.expectedTotal == 0 {
+                    minLen = max(1, ResponseEnvelope.size - state.buffer.count)
                 } else {
-                    cont.resume(returning: (data, isComplete))
+                    let remaining = max(1, state.expectedTotal - state.buffer.count)
+                    minLen = min(64 * 1024, remaining)
+                }
+                connection.receive(minimumIncompleteLength: minLen, maximumLength: 1024 * 1024) { data, _, isComplete, error in
+                    if let data, !data.isEmpty {
+                        state.buffer.append(data)
+                        idleTimer.rearm(after: timeout)
+                    }
+                    if let error {
+                        switch error {
+                        case .posix(.ECONNRESET), .posix(.ECANCELED):
+                            log("rx terminal error (peer reset/cancelled), total \(state.buffer.count) bytes")
+                            resume(.success(state.buffer))
+                        default:
+                            resume(.failure(ScopeClientError.receiveFailed(error)))
+                        }
+                        return
+                    }
+                    if isComplete {
+                        log("rx EOF, total \(state.buffer.count) bytes")
+                        resume(.success(state.buffer))
+                        return
+                    }
+                    // The scope stops sending without closing the connection, so
+                    // EOF would only arrive on idle timeout (~5s of dead air).
+                    // Parse the 12-byte envelope as soon as we have it and stop
+                    // receiving once we've got declared payload + envelope.
+                    if state.expectedTotal == 0, state.buffer.count >= ResponseEnvelope.size {
+                        if let env = try? ResponseEnvelope.parse(state.buffer.prefix(ResponseEnvelope.size)) {
+                            state.expectedTotal = ResponseEnvelope.size + env.payloadLength
+                            log("envelope: payload=\(env.payloadLength) flag=\(env.flag), expecting \(state.expectedTotal) total")
+                        }
+                    }
+                    if state.expectedTotal > 0, state.buffer.count >= state.expectedTotal {
+                        log("rx complete (envelope-driven), total \(state.buffer.count) bytes")
+                        resume(.success(state.buffer))
+                        return
+                    }
+                    receiveLoop()
                 }
             }
+            receiveLoop()
         }
+    }
+}
+
+/// Mutable state owned by the receive loop. The closure-based loop runs on the
+/// network queue (single-threaded) so unsynchronized mutation is safe.
+private final class ReceiveState: @unchecked Sendable {
+    var buffer = Data()
+    /// Total bytes expected (envelope + payload). Set to a positive value once
+    /// we've parsed the 12-byte envelope.
+    var expectedTotal = 0
+    private var finished = false
+    func tryFinish() -> Bool {
+        if finished { return false }
+        finished = true
+        return true
     }
 }
 
