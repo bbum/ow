@@ -107,13 +107,13 @@ final class ScopeClient: Sendable {
             let idleTimer = IdleTimer(queue: queue) { connection.cancel() }
             idleTimer.rearm(after: timeout)
 
-            func resume(_ result: Result<Data, Error>) {
+            @Sendable func resume(_ result: Result<Data, Error>) {
                 guard state.tryFinish() else { return }
                 idleTimer.cancel()
                 cont.resume(with: result)
             }
 
-            func receiveLoop() {
+            @Sendable func receiveLoop() {
                 // Pick a minimumIncompleteLength that matches what we know:
                 //  - Before the envelope is parsed, fetch just enough to see it (12 bytes).
                 //  - After parsing, request 64KB at a time to avoid one-callback-per-TCP-
