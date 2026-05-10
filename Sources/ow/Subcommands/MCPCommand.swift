@@ -86,9 +86,11 @@ struct MCPCommand: AsyncParsableCommand {
     var tools: [String] = []
 
     mutating func run() async throws {
-        // Resolve config eagerly so a misconfigured server fails fast at startup
-        // rather than on the first tool call.
-        let config = try scope.resolve()
+        // Resolve config lazily — an MCP server is a long-lived process that
+        // an LLM driver expects to stay up. If no host is configured, the
+        // server still starts; tools that need a host will tell the caller
+        // (the LLM, and through it the user) how to set one.
+        let config = try? scope.resolve()
         let enabled = tools.isEmpty ? MCPTools.allNames : Set(tools.map { $0.lowercased() })
         let server = MCPServer(scope: config, enabledTools: enabled)
         await server.run()

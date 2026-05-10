@@ -8,7 +8,7 @@ enum MCPTools {
         "parse_bin_file",
     ]
 
-    static func createTool(name: String, scope: ScopeConfig) -> (any MCPTool)? {
+    static func createTool(name: String, scope: ScopeConfig?) -> (any MCPTool)? {
         switch name {
         case "scope_status": return ScopeStatusTool(scope: scope)
         case "capture_screenshot": return CaptureScreenshotTool(scope: scope)
@@ -32,11 +32,11 @@ enum MCPTools {
 final class MCPServer {
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
-    private let scope: ScopeConfig
+    private let scope: ScopeConfig?
     private let enabledTools: Set<String>
     private var toolInstances: [String: any MCPTool] = [:]
 
-    init(scope: ScopeConfig, enabledTools: Set<String> = MCPTools.allNames) {
+    init(scope: ScopeConfig?, enabledTools: Set<String> = MCPTools.allNames) {
         self.scope = scope
         self.enabledTools = enabledTools
         self.encoder.outputFormatting = []

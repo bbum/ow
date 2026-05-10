@@ -22,14 +22,14 @@ struct CaptureScreenshotTool: MCPTool {
         ]) { _, new in new })
     ])
 
-    let scope: ScopeConfig
+    let scope: ScopeConfig?
 
-    init(scope: ScopeConfig) {
+    init(scope: ScopeConfig?) {
         self.scope = scope
     }
 
     func execute(args: [String: JSONValue]) async throws -> [JSONValue] {
-        let config = resolveScope(args: args, default: scope)
+        guard let config = resolveScope(args: args, default: scope) else { return [noHostBlock] }
         let client = ScopeClient(config)
         let response = try await client.capture(.startScreenshot)
         let bmpData = response.payload

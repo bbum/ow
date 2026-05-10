@@ -30,7 +30,7 @@ struct ParseBinFileTool: MCPTool {
         "required": .array([.string("path")])
     ])
 
-    init(scope: ScopeConfig) {} // path-based; no scope needed
+    init(scope: ScopeConfig?) {} // path-based; no scope needed
 
     func execute(args: [String: JSONValue]) async throws -> [JSONValue] {
         guard let path = args["path"]?.stringValue else {
